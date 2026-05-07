@@ -1,0 +1,76 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  
+
+  
+}
+model Role {
+  id          String @id @default(cuid())
+  name        String @unique 
+  description String?
+  users       User[]
+}
+enum Plan {
+  FREE_TRIAL
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+enum Status {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+model Subscription {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  plan      Plan     @default(FREE_TRIAL)
+  status    Status   @default(ACTIVE)
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model User{
+  id String @id @default (cuid())
+  email String @unique
+  password String
+  firstName String?
+  lastName String?
+  roleId String
+  role Role @relation(fields:[roleId],references: [id])
+  subscription Subscription?
+  projects Project[]
+  loginLogs LoginLog[]
+  isActive Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([email])
+  @@index([roleId])
+}
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  type        String
+  description String?
+  creatorId   String
+  creator     User     @relation(fields: [creatorId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([creatorId])
+}
+model LoginLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  ip        String?
+  userAgent String?
+  success   Boolean
+  createdAt DateTime @default(now())
+}
