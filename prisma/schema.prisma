@@ -1,20 +1,50 @@
 generator client {
   provider = "prisma-client-js"
-  
 }
 
 datasource db {
   provider = "postgresql"
-  
-
-  
 }
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  password     String
+  firstName    String?
+  lastName     String?
+  roleId       String
+  role         Role          @relation(fields: [roleId], references: [id])
+  subscription Subscription?
+  projects     Project[]
+  loginLogs    LoginLog[]
+  isActive     Boolean       @default(true)
+  isVerified   Boolean       @default(false)
+  otp          String?
+  otpExpiry    DateTime?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([email])
+  @@index([roleId])
+}
+
+model OtpLog {
+  id        String   @id @default(cuid())
+  email     String
+  otp       String
+  purpose   String //"registration", "password_reset", etc.
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
 model Role {
-  id          String @id @default(cuid())
-  name        String @unique 
+  id          String  @id @default(cuid())
+  name        String  @unique
   description String?
   users       User[]
 }
+
 enum Plan {
   FREE_TRIAL
   PROFESSIONAL
@@ -26,33 +56,18 @@ enum Status {
   EXPIRED
   CANCELLED
 }
+
 model Subscription {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id])
-  plan      Plan     @default(FREE_TRIAL)
-  status    Status   @default(ACTIVE)
+  id        String    @id @default(cuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id])
+  plan      Plan      @default(FREE_TRIAL)
+  status    Status    @default(ACTIVE)
   expiresAt DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
-model User{
-  id String @id @default (cuid())
-  email String @unique
-  password String
-  firstName String?
-  lastName String?
-  roleId String
-  role Role @relation(fields:[roleId],references: [id])
-  subscription Subscription?
-  projects Project[]
-  loginLogs LoginLog[]
-  isActive Boolean @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  @@index([email])
-  @@index([roleId])
-}
+
 model Project {
   id          String   @id @default(cuid())
   name        String
@@ -65,6 +80,7 @@ model Project {
 
   @@index([creatorId])
 }
+
 model LoginLog {
   id        String   @id @default(cuid())
   userId    String
