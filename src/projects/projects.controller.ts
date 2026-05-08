@@ -17,27 +17,35 @@ export class ProjectsController {
         return this.projectsService.create(dto, user.id);
     }
 
+    @Roles('ADMIN', 'ENGINEER', 'VIEWER')
+    @RequireSubscription('FREE_TRIAL', 'PROFESSIONAL', 'ENTERPRISE')
     @Get()
-    findAll(@Query('creatorId') creatorId?: string, @Query('role') role?: string) {
-        return this.projectsService.findAll({ creatorId, role });
+    findAll(
+        @CurrentUser() user: any,
+        @Query('creatorId') creatorId?: string,
+        @Query('role') role?: string,
+    ) {
+        return this.projectsService.findAll(user, { creatorId, role });
     }
 
+    @Roles('ADMIN', 'ENGINEER', 'VIEWER')
+    @RequireSubscription('FREE_TRIAL', 'PROFESSIONAL', 'ENTERPRISE')
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.projectsService.findOne(id);
+    findOne(@Param('id') id: string, @CurrentUser() user: any) {
+        return this.projectsService.findOne(id, user);
     }
 
     @Roles('ADMIN', 'ENGINEER')
     @RequireSubscription('FREE_TRIAL', 'PROFESSIONAL', 'ENTERPRISE')
     @Patch(':id')
-    update(@Param('id') id: string, @Body() dto: UpdateProjectDto) {
-        return this.projectsService.update(id, dto);
+    update(@Param('id') id: string, @Body() dto: UpdateProjectDto, @CurrentUser() user: any) {
+        return this.projectsService.update(id, dto, user);
     }
 
     @Roles('ADMIN', 'ENGINEER')
     @RequireSubscription('FREE_TRIAL', 'PROFESSIONAL', 'ENTERPRISE')
     @Delete(':id')
-    remove(@Param('id') id: string) {
-        return this.projectsService.remove(id);
+    remove(@Param('id') id: string, @CurrentUser() user: any) {
+        return this.projectsService.remove(id, user);
     }
 }
