@@ -1,9 +1,9 @@
-import 'dotenv/config';
-import { PrismaClient } from '@prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
+require('dotenv').config();
+const { PrismaClient } = require('@prisma/client');
+const { PrismaPg } = require('@prisma/adapter-pg');
 
 const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
+  connectionString: process.env.DATABASE_URL,
 });
 
 const prisma = new PrismaClient({ adapter });
@@ -14,7 +14,7 @@ async function main() {
   const roles = [
     { name: 'ADMIN', description: 'Administrator with full access' },
     { name: 'ENGINEER', description: 'Project engineer' },
-    { name: 'MANAGER', description: 'Project manager' },
+    { name: 'VIEWER', description: 'Read-only viewer' },
   ];
 
   for (const role of roles) {

@@ -83,8 +83,9 @@ model Project {
 
 model LoginLog {
   id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  email     String?
   ip        String?
   userAgent String?
   success   Boolean
