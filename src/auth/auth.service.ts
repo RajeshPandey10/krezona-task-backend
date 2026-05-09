@@ -33,11 +33,12 @@ export class AuthService {
 
         const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-        const engineerRole = await this.prisma.role.findUnique({
-            where: { name: 'ENGINEER' },
+
+        const viewerRole = await this.prisma.role.findUnique({
+            where: { name: 'VIEWER' },
         });
 
-        if (!engineerRole) AppError.badRequest('Default role not found');
+        if (!viewerRole) AppError.badRequest('Default role not found');
 
         const user = await this.prisma.user.create({
             data: {
@@ -45,7 +46,7 @@ export class AuthService {
                 password: hashedPassword,
                 firstName: dto.firstName,
                 lastName: dto.lastName,
-                roleId: engineerRole.id,
+                roleId: viewerRole.id,
                 isActive: false,
                 isVerified: false,
             },
@@ -97,7 +98,7 @@ export class AuthService {
     async login(dto: LoginDto, context: LoginContext = {}) {
         const user = await this.prisma.user.findUnique({
             where: { email: dto.email },
-            include: { role: true },
+            include: { role: true, subscription: true },
         });
 
         if (!user) {
@@ -165,6 +166,17 @@ export class AuthService {
             AppError.unauthorized('Account is deactivated');
         }
 
+
+        if (user.role.name === 'ADMIN' && !user.subscription) {
+            await this.prisma.subscription.create({
+                data: {
+                    userId: user.id,
+                    plan: 'PROFESSIONAL',
+                    status: 'ACTIVE',
+                },
+            });
+        }
+
         const payload = {
             sub: user.id,
             email: user.email,
@@ -183,6 +195,11 @@ export class AuthService {
             },
         });
 
+
+        const latestSubscription = await this.prisma.subscription.findUnique({
+            where: { userId: user.id },
+        });
+
         return {
             success: true,
             accessToken,
@@ -192,6 +209,13 @@ export class AuthService {
                 firstName: user.firstName,
                 lastName: user.lastName,
                 role: user.role.name,
+                subscription: latestSubscription ? {
+                    plan: latestSubscription.plan,
+                    status: latestSubscription.status,
+                    expiresAt: latestSubscription.expiresAt,
+                    isActive: latestSubscription.status === 'ACTIVE' &&
+                        (!latestSubscription.expiresAt || new Date(latestSubscription.expiresAt) > new Date()),
+                } : undefined,
             },
         };
     }
