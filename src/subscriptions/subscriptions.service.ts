@@ -44,6 +44,28 @@ export class SubscriptionsService {
         });
     }
 
+    async createForUser(userId: string, dto: UpdateSubscriptionDto) {
+        const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
+        if (!existingUser) {
+            AppError.notFound('User not found');
+        }
+
+        const existingSubscription = await this.prisma.subscription.findUnique({ where: { userId } });
+        if (existingSubscription) {
+            AppError.badRequest('User already has a subscription');
+        }
+
+        return this.prisma.subscription.create({
+            data: {
+                userId,
+                plan: dto.plan ?? 'FREE_TRIAL',
+                status: dto.status ?? 'ACTIVE',
+                expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+            },
+            include: { user: { select: { id: true, email: true, firstName: true, lastName: true } } },
+        });
+    }
+
     async remove(userId: string) {
         const existing = await this.prisma.subscription.findUnique({ where: { userId } });
         if (!existing) {

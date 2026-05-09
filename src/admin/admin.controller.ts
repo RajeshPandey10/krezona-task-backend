@@ -91,6 +91,12 @@ export class AdminController {
     }
 
     @Roles('ADMIN')
+    @Post('subscriptions/:userId')
+    createSubscriptionForUser(@Param('userId') userId: string, @Body() dto: UpdateSubscriptionDto) {
+        return this.adminService.updateSubscriptionForUser(userId, dto as any);
+    }
+
+    @Roles('ADMIN')
     @Patch('subscriptions/:userId')
     updateSubscriptionForUser(@Param('userId') userId: string, @Body() dto: UpdateSubscriptionDto) {
         return this.adminService.updateSubscriptionForUser(userId, dto);

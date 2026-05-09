@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
@@ -17,6 +17,12 @@ export class SubscriptionsController {
     @Get(':userId')
     findByUserId(@Param('userId') userId: string) {
         return this.subscriptionsService.findByUserId(userId);
+    }
+
+    @Roles('ADMIN')
+    @Post(':userId')
+    createForUser(@Param('userId') userId: string, @Body() dto: UpdateSubscriptionDto) {
+        return this.subscriptionsService.createForUser(userId, dto);
     }
 
     @Roles('ADMIN')
