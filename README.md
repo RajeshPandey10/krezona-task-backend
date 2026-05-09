@@ -47,8 +47,7 @@ NestJS + PostgreSQL backend for civil engineering project management.
    # generate Prisma client after installing dependencies
    npx prisma generate
 
-   # deploy migrations in CI/production (preferred)
-   npx prisma migrate deploy
+  
 
    # if you must run interactive dev migrations locally against Supabase, use the Direct URL
    # (replace <DIRECT_URL> with your DIRECT_URL)
@@ -98,22 +97,7 @@ npm install
 npm run dev
 ```
 
-### Production build
 
-```bash
-# Backend
-cd krezona-task-server
-npm install --production
-npx prisma generate
-npm run build
-NODE_ENV=production npm run start
-
-# Frontend
-cd ../krezona-task-client
-npm install --production
-npm run build
-npm run start
-```
 
 ## Database Description (Supabase)
 
