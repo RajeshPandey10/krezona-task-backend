@@ -4,17 +4,17 @@ import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('logs')
 export class LogsController {
-    constructor(private readonly logsService: LogsService) { }
+  constructor(private readonly logsService: LogsService) {}
 
-    @Roles('ADMIN')
-    @Get()
-    findAll(@Query('userId') userId?: string) {
-        return this.logsService.findAll(userId);
-    }
+  @Roles('ADMIN')
+  @Get()
+  findAll(@Query('userId') userId?: string) {
+    return this.logsService.findAll(userId);
+  }
 
-    @Roles('ADMIN')
-    @Get(':userId')
-    findByUserId(@Param('userId') userId: string) {
-        return this.logsService.findByUserId(userId);
-    }
+  @Roles('ADMIN')
+  @Get(':userId')
+  findByUserId(@Param('userId') userId: string) {
+    return this.logsService.findByUserId(userId);
+  }
 }

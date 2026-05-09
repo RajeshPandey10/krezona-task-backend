@@ -6,48 +6,51 @@ import { AppError } from '../utils/error.util';
 
 @Injectable()
 export class SubscriptionGuard implements CanActivate {
-    constructor(
-        private readonly reflector: Reflector,
-        private readonly prisma: PrismaService,
-    ) { }
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly prisma: PrismaService,
+  ) {}
 
-    async canActivate(context: ExecutionContext): Promise<boolean> {
-        const requiredPlans = this.reflector.getAllAndOverride<string[]>(SUBSCRIPTION_KEY, [
-            context.getHandler(),
-            context.getClass(),
-        ]);
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const requiredPlans = this.reflector.getAllAndOverride<string[]>(
+      SUBSCRIPTION_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
-        if (!requiredPlans || requiredPlans.length === 0) {
-            return true;
-        }
-
-        const request = context.switchToHttp().getRequest();
-        const userId = request.user?.id;
-
-        if (!userId) {
-            AppError.unauthorized('Authentication required');
-        }
-
-        const subscription = await this.prisma.subscription.findUnique({
-            where: { userId },
-        });
-
-        if (!subscription) {
-            AppError.forbidden('Subscription required');
-        }
-
-        if (subscription.status !== 'ACTIVE') {
-            AppError.forbidden('Subscription is not active');
-        }
-
-        if (subscription.expiresAt && new Date(subscription.expiresAt) < new Date()) {
-            AppError.forbidden('Subscription has expired');
-        }
-
-        if (!requiredPlans.includes(subscription.plan)) {
-            AppError.forbidden('Your subscription plan does not allow this action');
-        }
-
-        return true;
+    if (!requiredPlans || requiredPlans.length === 0) {
+      return true;
     }
+
+    const request = context.switchToHttp().getRequest();
+    const userId = request.user?.id;
+
+    if (!userId) {
+      AppError.unauthorized('Authentication required');
+    }
+
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { userId },
+    });
+
+    if (!subscription) {
+      AppError.forbidden('Subscription required');
+    }
+
+    if (subscription.status !== 'ACTIVE') {
+      AppError.forbidden('Subscription is not active');
+    }
+
+    if (
+      subscription.expiresAt &&
+      new Date(subscription.expiresAt) < new Date()
+    ) {
+      AppError.forbidden('Subscription has expired');
+    }
+
+    if (!requiredPlans.includes(subscription.plan)) {
+      AppError.forbidden('Your subscription plan does not allow this action');
+    }
+
+    return true;
+  }
 }

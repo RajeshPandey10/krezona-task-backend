@@ -67,4 +67,4 @@ import { SubscriptionGuard } from './common/guards/subscription.guard';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -1,39 +1,53 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 
 @Controller('subscriptions')
 export class SubscriptionsController {
-    constructor(private readonly subscriptionsService: SubscriptionsService) { }
+  constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
-    @Roles('ADMIN')
-    @Get()
-    findAll() {
-        return this.subscriptionsService.findAll();
-    }
+  @Roles('ADMIN')
+  @Get()
+  findAll() {
+    return this.subscriptionsService.findAll();
+  }
 
-    @Roles('ADMIN')
-    @Get(':userId')
-    findByUserId(@Param('userId') userId: string) {
-        return this.subscriptionsService.findByUserId(userId);
-    }
+  @Roles('ADMIN')
+  @Get(':userId')
+  findByUserId(@Param('userId') userId: string) {
+    return this.subscriptionsService.findByUserId(userId);
+  }
 
-    @Roles('ADMIN')
-    @Post(':userId')
-    createForUser(@Param('userId') userId: string, @Body() dto: UpdateSubscriptionDto) {
-        return this.subscriptionsService.createForUser(userId, dto);
-    }
+  @Roles('ADMIN')
+  @Post(':userId')
+  createForUser(
+    @Param('userId') userId: string,
+    @Body() dto: UpdateSubscriptionDto,
+  ) {
+    return this.subscriptionsService.createForUser(userId, dto);
+  }
 
-    @Roles('ADMIN')
-    @Patch(':userId')
-    updateForUser(@Param('userId') userId: string, @Body() dto: UpdateSubscriptionDto) {
-        return this.subscriptionsService.updateForUser(userId, dto);
-    }
+  @Roles('ADMIN')
+  @Patch(':userId')
+  updateForUser(
+    @Param('userId') userId: string,
+    @Body() dto: UpdateSubscriptionDto,
+  ) {
+    return this.subscriptionsService.updateForUser(userId, dto);
+  }
 
-    @Roles('ADMIN')
-    @Delete(':userId')
-    remove(@Param('userId') userId: string) {
-        return this.subscriptionsService.remove(userId);
-    }
+  @Roles('ADMIN')
+  @Delete(':userId')
+  remove(@Param('userId') userId: string) {
+    return this.subscriptionsService.remove(userId);
+  }
 }

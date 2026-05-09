@@ -6,16 +6,22 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.enableCors({
-    origin: ["http://localhost:3001", "https://krezona-task-client.vercel.app", "http://localhost:3000"],
+    origin: [
+      'http://localhost:3001',
+      'https://krezona-task-client.vercel.app',
+      'http://localhost:3000',
+    ],
     credentials: true,
-  })
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }))
+  });
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   await app.listen(process.env.PORT ?? 3000);
-  console.log("server is running on http://localhost:3000")
+  console.log('server is running on http://localhost:3000');
 }
 bootstrap();

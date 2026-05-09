@@ -6,41 +6,41 @@ import { AppError } from '../../common/utils/error.util';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
-    constructor(
-        private readonly reflector: Reflector,
-        private readonly jwtUtil: JwtUtil,
-    ) { }
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly jwtUtil: JwtUtil,
+  ) {}
 
-    canActivate(context: ExecutionContext): boolean {
-        const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_KEY, [
-            context.getHandler(),
-            context.getClass(),
-        ]);
+  canActivate(context: ExecutionContext): boolean {
+    const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_KEY, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
 
-        if (isPublic) {
-            return true;
-        }
-
-        const request = context.switchToHttp().getRequest();
-        const authHeader = request.headers.authorization;
-
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            AppError.unauthorized('Missing authorization token');
-        }
-
-        const token = authHeader.slice(7);
-        const payload = this.jwtUtil.verifyToken(token) as {
-            sub: string;
-            email: string;
-            role: string;
-        };
-
-        request.user = {
-            id: payload.sub,
-            email: payload.email,
-            role: payload.role,
-        };
-
-        return true;
+    if (isPublic) {
+      return true;
     }
+
+    const request = context.switchToHttp().getRequest();
+    const authHeader = request.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      AppError.unauthorized('Missing authorization token');
+    }
+
+    const token = authHeader.slice(7);
+    const payload = this.jwtUtil.verifyToken(token) as {
+      sub: string;
+      email: string;
+      role: string;
+    };
+
+    request.user = {
+      id: payload.sub,
+      email: payload.email,
+      role: payload.role,
+    };
+
+    return true;
+  }
 }

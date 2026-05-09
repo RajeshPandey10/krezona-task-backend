@@ -5,74 +5,100 @@ import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 
 @Injectable()
 export class SubscriptionsService {
-    constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-    findAll() {
-        return this.prisma.subscription.findMany({
-            include: { user: { select: { id: true, email: true, firstName: true, lastName: true } } },
-            orderBy: { createdAt: 'desc' },
-        });
+  findAll() {
+    return this.prisma.subscription.findMany({
+      include: {
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  findByUserId(userId: string) {
+    return this.prisma.subscription.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+      },
+    });
+  }
+
+  async updateForUser(userId: string, dto: UpdateSubscriptionDto) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!existingUser) {
+      AppError.notFound('User not found');
     }
 
-    findByUserId(userId: string) {
-        return this.prisma.subscription.findUnique({
-            where: { userId },
-            include: { user: { select: { id: true, email: true, firstName: true, lastName: true } } },
-        });
+    return this.prisma.subscription.upsert({
+      where: { userId },
+      create: {
+        userId,
+        plan: dto.plan ?? 'FREE_TRIAL',
+        status: dto.status ?? 'ACTIVE',
+        expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+      },
+      update: {
+        ...(dto.plan ? { plan: dto.plan } : {}),
+        ...(dto.status ? { status: dto.status } : {}),
+        ...(dto.expiresAt !== undefined
+          ? { expiresAt: new Date(dto.expiresAt) }
+          : {}),
+      },
+      include: {
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+      },
+    });
+  }
+
+  async createForUser(userId: string, dto: UpdateSubscriptionDto) {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+    if (!existingUser) {
+      AppError.notFound('User not found');
     }
 
-    async updateForUser(userId: string, dto: UpdateSubscriptionDto) {
-        const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
-        if (!existingUser) {
-            AppError.notFound('User not found');
-        }
-
-        return this.prisma.subscription.upsert({
-            where: { userId },
-            create: {
-                userId,
-                plan: dto.plan ?? 'FREE_TRIAL',
-                status: dto.status ?? 'ACTIVE',
-                expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
-            },
-            update: {
-                ...(dto.plan ? { plan: dto.plan } : {}),
-                ...(dto.status ? { status: dto.status } : {}),
-                ...(dto.expiresAt !== undefined ? { expiresAt: new Date(dto.expiresAt) } : {}),
-            },
-            include: { user: { select: { id: true, email: true, firstName: true, lastName: true } } },
-        });
+    const existingSubscription = await this.prisma.subscription.findUnique({
+      where: { userId },
+    });
+    if (existingSubscription) {
+      AppError.badRequest('User already has a subscription');
     }
 
-    async createForUser(userId: string, dto: UpdateSubscriptionDto) {
-        const existingUser = await this.prisma.user.findUnique({ where: { id: userId } });
-        if (!existingUser) {
-            AppError.notFound('User not found');
-        }
+    return this.prisma.subscription.create({
+      data: {
+        userId,
+        plan: dto.plan ?? 'FREE_TRIAL',
+        status: dto.status ?? 'ACTIVE',
+        expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
+      },
+      include: {
+        user: {
+          select: { id: true, email: true, firstName: true, lastName: true },
+        },
+      },
+    });
+  }
 
-        const existingSubscription = await this.prisma.subscription.findUnique({ where: { userId } });
-        if (existingSubscription) {
-            AppError.badRequest('User already has a subscription');
-        }
-
-        return this.prisma.subscription.create({
-            data: {
-                userId,
-                plan: dto.plan ?? 'FREE_TRIAL',
-                status: dto.status ?? 'ACTIVE',
-                expiresAt: dto.expiresAt ? new Date(dto.expiresAt) : undefined,
-            },
-            include: { user: { select: { id: true, email: true, firstName: true, lastName: true } } },
-        });
+  async remove(userId: string) {
+    const existing = await this.prisma.subscription.findUnique({
+      where: { userId },
+    });
+    if (!existing) {
+      AppError.notFound('Subscription not found');
     }
 
-    async remove(userId: string) {
-        const existing = await this.prisma.subscription.findUnique({ where: { userId } });
-        if (!existing) {
-            AppError.notFound('Subscription not found');
-        }
-
-        await this.prisma.subscription.delete({ where: { userId } });
-        return { success: true, message: 'Subscription removed successfully' };
-    }
+    await this.prisma.subscription.delete({ where: { userId } });
+    return { success: true, message: 'Subscription removed successfully' };
+  }
 }

@@ -5,17 +5,17 @@ import { Roles } from '../common/decorators/roles.decorator';
 
 @Controller('roles')
 export class RolesController {
-    constructor(private readonly rolesService: RolesService) { }
+  constructor(private readonly rolesService: RolesService) {}
 
-    @Roles('ADMIN')
-    @Get()
-    findAll() {
-        return this.rolesService.findAll();
-    }
+  @Roles('ADMIN')
+  @Get()
+  findAll() {
+    return this.rolesService.findAll();
+  }
 
-    @Roles('ADMIN')
-    @Post()
-    create(@Body() dto: CreateRoleDto) {
-        return this.rolesService.create(dto);
-    }
+  @Roles('ADMIN')
+  @Post()
+  create(@Body() dto: CreateRoleDto) {
+    return this.rolesService.create(dto);
+  }
 }
