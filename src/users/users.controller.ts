@@ -13,6 +13,10 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
+type CurrentUserPayload = {
+  id: string;
+};
+
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -30,7 +34,7 @@ export class UsersController {
   }
 
   @Get('me')
-  me(@CurrentUser() user: any) {
+  me(@CurrentUser() user: CurrentUserPayload) {
     return this.usersService.findOne(user.id);
   }
 

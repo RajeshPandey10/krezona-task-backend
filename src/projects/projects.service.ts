@@ -3,11 +3,7 @@ import { PrismaService } from '../database/prisma.service';
 import { AppError } from '../common/utils/error.util';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-
-type RequestUser = {
-  id: string;
-  role: 'ADMIN' | 'ENGINEER' | 'VIEWER' | string;
-};
+import type { CurrentUserShape } from '../common/decorators/current-user.decorator';
 
 @Injectable()
 export class ProjectsService {
@@ -27,10 +23,7 @@ export class ProjectsService {
     });
   }
 
-  findAll(
-    _user: RequestUser,
-    filters: { creatorId?: string; role?: string } = {},
-  ) {
+  findAll(filters: { creatorId?: string; role?: string } = {}) {
     const where = {
       ...(filters.creatorId ? { creatorId: filters.creatorId } : {}),
       ...(filters.role
@@ -55,7 +48,7 @@ export class ProjectsService {
     });
   }
 
-  async findOne(id: string, _user: RequestUser) {
+  async findOne(id: string) {
     const project = await this.prisma.project.findUnique({
       where: { id },
       include: {
@@ -72,8 +65,8 @@ export class ProjectsService {
     return project;
   }
 
-  async update(id: string, dto: UpdateProjectDto, user: RequestUser) {
-    const project = await this.findOne(id, user);
+  async update(id: string, dto: UpdateProjectDto, user: CurrentUserShape) {
+    const project = await this.findOne(id);
 
     if (user.role !== 'ADMIN' && project.creatorId !== user.id) {
       AppError.forbidden('You can only update your own projects');
@@ -90,8 +83,8 @@ export class ProjectsService {
     });
   }
 
-  async remove(id: string, user: RequestUser) {
-    const project = await this.findOne(id, user);
+  async remove(id: string, user: CurrentUserShape) {
+    const project = await this.findOne(id);
 
     if (user.role !== 'ADMIN' && project.creatorId !== user.id) {
       AppError.forbidden('You can only delete your own projects');

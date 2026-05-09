@@ -11,7 +11,10 @@ import {
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
+import {
+  CurrentUser,
+  type CurrentUserShape,
+} from '../common/decorators/current-user.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RequireSubscription } from '../common/decorators/subscription.decorator';
 
@@ -22,7 +25,7 @@ export class ProjectsController {
   @Roles('ADMIN', 'ENGINEER')
   @RequireSubscription('FREE_TRIAL', 'PROFESSIONAL', 'ENTERPRISE')
   @Post()
-  create(@Body() dto: CreateProjectDto, @CurrentUser() user: any) {
+  create(@Body() dto: CreateProjectDto, @CurrentUser() user: CurrentUserShape) {
     return this.projectsService.create(dto, user.id);
   }
 
@@ -30,18 +33,18 @@ export class ProjectsController {
   @RequireSubscription('FREE_TRIAL', 'PROFESSIONAL', 'ENTERPRISE')
   @Get()
   findAll(
-    @CurrentUser() user: any,
+    @CurrentUser() _user: CurrentUserShape,
     @Query('creatorId') creatorId?: string,
     @Query('role') role?: string,
   ) {
-    return this.projectsService.findAll(user, { creatorId, role });
+    return this.projectsService.findAll({ creatorId, role });
   }
 
   @Roles('ADMIN', 'ENGINEER', 'VIEWER')
   @RequireSubscription('FREE_TRIAL', 'PROFESSIONAL', 'ENTERPRISE')
   @Get(':id')
-  findOne(@Param('id') id: string, @CurrentUser() user: any) {
-    return this.projectsService.findOne(id, user);
+  findOne(@Param('id') id: string) {
+    return this.projectsService.findOne(id);
   }
 
   @Roles('ADMIN', 'ENGINEER')
@@ -50,7 +53,7 @@ export class ProjectsController {
   update(
     @Param('id') id: string,
     @Body() dto: UpdateProjectDto,
-    @CurrentUser() user: any,
+    @CurrentUser() user: CurrentUserShape,
   ) {
     return this.projectsService.update(id, dto, user);
   }
@@ -58,7 +61,7 @@ export class ProjectsController {
   @Roles('ADMIN', 'ENGINEER')
   @RequireSubscription('FREE_TRIAL', 'PROFESSIONAL', 'ENTERPRISE')
   @Delete(':id')
-  remove(@Param('id') id: string, @CurrentUser() user: any) {
+  remove(@Param('id') id: string, @CurrentUser() user: CurrentUserShape) {
     return this.projectsService.remove(id, user);
   }
 }

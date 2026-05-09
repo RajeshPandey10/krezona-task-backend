@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PrismaService } from '../../database/prisma.service';
+import type { RequestWithUser } from '../decorators/current-user.decorator';
 import { SUBSCRIPTION_KEY } from '../decorators/subscription.decorator';
 import { AppError } from '../utils/error.util';
 
@@ -21,7 +22,7 @@ export class SubscriptionGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
     const userId = request.user?.id;
 
     if (!userId) {

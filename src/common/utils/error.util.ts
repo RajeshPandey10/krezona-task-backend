@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 
 export class AppError {
-  static badRequest(message: string, details?: any): never {
+  static badRequest(message: string, details?: unknown): never {
     throw new BadRequestException({
       success: false,
       message,
@@ -41,7 +41,7 @@ export class AppError {
     });
   }
 
-  static custom(statusCode: number, message: string, details?: any): never {
+  static custom(statusCode: number, message: string): never {
     throw new Error(message); // Will be caught by global exception filter later
   }
 }

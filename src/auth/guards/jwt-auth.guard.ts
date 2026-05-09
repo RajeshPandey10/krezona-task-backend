@@ -1,8 +1,17 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import type { Request } from 'express';
 import { JwtUtil } from '../../common/utils/jwt.util';
 import { PUBLIC_KEY } from '../../common/decorators/public.decorator';
 import { AppError } from '../../common/utils/error.util';
+
+type AuthenticatedRequest = Request & {
+  user?: {
+    id: string;
+    email: string;
+    role: string;
+  };
+};
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
@@ -21,7 +30,7 @@ export class JwtAuthGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {

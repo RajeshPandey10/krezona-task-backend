@@ -7,6 +7,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
@@ -35,17 +36,17 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() dto: LoginDto, @Req() req: any) {
+  async login(@Body() dto: LoginDto, @Req() req: Request) {
     return this.authService.login(dto, {
       ip: req.ip,
-      userAgent: req.headers['user-agent'],
+      userAgent: req.get('user-agent') ?? undefined,
     });
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout() {
+  logout() {
     return this.authService.logout();
   }
 }

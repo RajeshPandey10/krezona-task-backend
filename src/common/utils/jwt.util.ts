@@ -19,10 +19,10 @@ export class JwtUtil {
     });
   }
 
-  verifyToken(token: string): any {
+  verifyToken(token: string): unknown {
     try {
       return jwt.verify(token, this.configService.get<string>('JWT_SECRET')!);
-    } catch (error) {
+    } catch {
       throw new Error('Invalid or expired token');
     }
   }

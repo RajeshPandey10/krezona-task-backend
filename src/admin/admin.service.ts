@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import * as bcrypt from 'bcryptjs';
 import { PrismaService } from '../database/prisma.service';
 import { AppError } from '../common/utils/error.util';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -188,13 +187,13 @@ export class AdminService {
   async activateSubscription(userId: string) {
     return this.subscriptionsService.updateForUser(userId, {
       status: 'ACTIVE',
-    } as any);
+    });
   }
 
   async deactivateSubscription(userId: string) {
     return this.subscriptionsService.updateForUser(userId, {
       status: 'CANCELLED',
-    } as any);
+    });
   }
 
   findLogs(userId?: string) {

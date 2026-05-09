@@ -225,7 +225,7 @@ export class AuthService {
     };
   }
 
-  async logout() {
+  logout() {
     return {
       success: true,
       message: 'Logged out successfully',
