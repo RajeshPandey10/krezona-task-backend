@@ -127,6 +127,19 @@ export class AuthService {
         }
 
         if (!user.isVerified) {
+            const otp = this.otpUtil.generateOtp();
+            const otpExpiry = this.otpUtil.generateExpiry(10);
+
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    otp,
+                    otpExpiry,
+                },
+            });
+
+            await this.mailService.sendOtpEmail(user.email, otp);
+
             await this.prisma.loginLog.create({
                 data: {
                     email: user.email,
