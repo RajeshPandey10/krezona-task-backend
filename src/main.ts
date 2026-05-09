@@ -8,7 +8,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3001',
-      'https://krezona-task-client.vercel.app',
+      'https://krezona.rajeshpandey10.com.np',
       'http://localhost:3000',
     ],
     credentials: true,

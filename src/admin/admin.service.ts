@@ -16,7 +16,7 @@ export class AdminService {
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly subscriptionsService: SubscriptionsService,
-  ) {}
+  ) { }
 
   async dashboard() {
     const [users, projects, subscriptions, logs, failedLogs] =
@@ -63,8 +63,8 @@ export class AdminService {
     const role = dto.roleId
       ? await this.prisma.role.findUnique({ where: { id: dto.roleId } })
       : await this.prisma.role.findUnique({
-          where: { name: dto.roleName!.toUpperCase() },
-        });
+        where: { name: dto.roleName!.toUpperCase() },
+      });
 
     if (!role) {
       AppError.badRequest('Role not found');
@@ -89,14 +89,32 @@ export class AdminService {
   }
 
   async removeUser(id: string) {
-    await this.findUserById(id);
+    try {
+      await this.findUserById(id);
 
-    await this.prisma.user.delete({ where: { id } });
+      await this.prisma.subscription.deleteMany({
+        where: { userId: id },
+      });
 
-    return {
-      success: true,
-      message: 'User deleted successfully',
-    };
+      await this.prisma.project.deleteMany({
+        where: { creatorId: id },
+      });
+
+      await this.prisma.user.delete({ where: { id } });
+
+      return {
+        success: true,
+        message: 'User deleted successfully',
+      };
+    } catch (error: unknown) {
+      const err = error as Record<string, unknown>;
+      if (err.code === 'P2003' || err.code === 'P2025') {
+        AppError.badRequest(
+          'Cannot delete user. Ensure all related data has been removed.',
+        );
+      }
+      throw error;
+    }
   }
 
   findRoles() {

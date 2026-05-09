@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { Roles } from '../common/decorators/roles.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { UpdateSubscriptionDto } from './dto/update-subscription.dto';
 
 @Controller('subscriptions')
@@ -25,6 +26,11 @@ export class SubscriptionsController {
   @Get(':userId')
   findByUserId(@Param('userId') userId: string) {
     return this.subscriptionsService.findByUserId(userId);
+  }
+
+  @Get('me')
+  me(@CurrentUser() user: { id: string }) {
+    return this.subscriptionsService.findByUserId(user.id);
   }
 
   @Roles('ADMIN')

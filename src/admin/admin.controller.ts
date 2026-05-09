@@ -7,6 +7,7 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AdminService } from './admin.service';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CreateUserDto } from '../users/dto/create-user.dto';
@@ -40,24 +41,28 @@ export class AdminController {
 
   @Roles('ADMIN')
   @Post('users')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   createUser(@Body() dto: CreateUserDto) {
     return this.adminService.createUser(dto);
   }
 
   @Roles('ADMIN')
   @Patch('users/:id')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
   updateUser(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.adminService.updateUser(id, dto);
   }
 
   @Roles('ADMIN')
   @Patch('users/:id/role')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   updateUserRole(@Param('id') id: string, @Body() dto: UpdateUserRoleDto) {
     return this.adminService.updateUserRole(id, dto);
   }
 
   @Roles('ADMIN')
   @Delete('users/:id')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   removeUser(@Param('id') id: string) {
     return this.adminService.removeUser(id);
   }
@@ -70,18 +75,21 @@ export class AdminController {
 
   @Roles('ADMIN')
   @Post('roles')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   createRole(@Body() dto: CreateRoleDto) {
     return this.adminService.createRole(dto);
   }
 
   @Roles('ADMIN')
   @Patch('roles/:id')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   updateRole(@Param('id') id: string, @Body() dto: UpdateRoleDto) {
     return this.adminService.updateRole(id, dto);
   }
 
   @Roles('ADMIN')
   @Delete('roles/:id')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   removeRole(@Param('id') id: string) {
     return this.adminService.removeRole(id);
   }
@@ -100,6 +108,7 @@ export class AdminController {
 
   @Roles('ADMIN')
   @Post('subscriptions/:userId')
+  @Throttle({ default: { limit: 15, ttl: 60000 } })
   createSubscriptionForUser(
     @Param('userId') userId: string,
     @Body() dto: UpdateSubscriptionDto,
@@ -109,6 +118,7 @@ export class AdminController {
 
   @Roles('ADMIN')
   @Patch('subscriptions/:userId')
+  @Throttle({ default: { limit: 25, ttl: 60000 } })
   updateSubscriptionForUser(
     @Param('userId') userId: string,
     @Body() dto: UpdateSubscriptionDto,
@@ -118,12 +128,14 @@ export class AdminController {
 
   @Roles('ADMIN')
   @Patch('subscriptions/:userId/activate')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   activateSubscription(@Param('userId') userId: string) {
     return this.adminService.activateSubscription(userId);
   }
 
   @Roles('ADMIN')
   @Patch('subscriptions/:userId/deactivate')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
   deactivateSubscription(@Param('userId') userId: string) {
     return this.adminService.deactivateSubscription(userId);
   }
