@@ -206,4 +206,54 @@ Seeded on first migration:
 - `ENGINEER` — Can create/update/delete own projects, and view all projects
 - `VIEWER` — Read-only role, can view all projects
 
+### Architecture Diagram
+
+```mermaid
+flowchart LR
+   F[Frontend (Next.js)] -->|API requests| A[Backend API (NestJS)]
+   A --> P[Prisma Client]
+   P --> DB[(PostgreSQL / Supabase)]
+   A -->|Emails / OTP| SMTP[SMTP / Mail Service]
+   A -->|Auth| JWT[(JWT + JwtUtil)]
+   note right of A: Guards: JwtAuthGuard, RolesGuard, SubscriptionGuard
+```
+
+### Security & Secrets Handling (Recommendations)
+
+- **Environment variables:** Keep all secrets (e.g. `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, SMTP credentials) out of source control. Use `.env` for local development and a secrets manager in production.
+- **Production secret stores:** Use a secrets manager such as HashiCorp Vault, AWS Secrets Manager, Azure Key Vault, or Supabase project secrets. Avoid storing long-lived secrets directly in CI logs or repo settings.
+- **JWT handling & expiration:** `JWT_SECRET` protects tokens. Use short access token TTLs (e.g., 15m) and refresh tokens if long sessions are required. Rotate `JWT_SECRET` periodically and provide a token revocation mechanism if needed.
+- **Token storage:** For web frontends prefer `HttpOnly`, `Secure`, `SameSite` cookies for access/refresh tokens. For desktop apps (Electron/Tauri) store tokens in the OS secure store (Keychain, Windows Credential Manager) rather than localStorage.
+- **CORS policy rationale:** Restrict `CORS` to known origins (frontend app origin(s)). In `src/main.ts` CORS is configured to allow specific origins and credentials. This prevents unwanted cross-origin access while allowing the frontend to send cookies when credentials are enabled.
+- **Input validation & sanitization:** Use `ValidationPipe` and DTO validation to protect against malformed input and basic injection attacks.
+- **Rate limiting:** Use global throttling (`@nestjs/throttler`) plus per-route `@Throttle` on sensitive admin endpoints to mitigate brute-force and abusive requests.
+
+### Common operational notes
+
+- Never commit `.env` or `secrets.*` files. Add them to `.gitignore`.
+- Use database connection pooling (Supabase Session Pooler) for production workloads.
+- Ensure SMTP credentials used for OTP are limited to sending and rotated regularly.
+
+### API docs & examples
+
+- A Postman documentation and collection is available here: https://documenter.getpostman.com/view/39660157/2sBXqNkdRo
+
+Example `curl` (login) and protected request:
+
+```bash
+# Login
+curl -X POST 'http://localhost:3000/auth/login' \
+   -H 'Content-Type: application/json' \
+   -d '{"email":"alice@example.com","password":"password123"}'
+
+# Response contains `accessToken` in JSON. Use it in Authorization header for protected endpoints:
+curl 'http://localhost:3000/users/me' \
+   -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+If you prefer Postman, import the collection from the Postman documentation link above and set an `access_token` environment variable to test protected routes.
+
+
+
+
 
