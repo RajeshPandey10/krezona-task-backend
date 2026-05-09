@@ -23,8 +23,10 @@ NestJS + PostgreSQL backend for civil engineering project management.
    Create a `.env` file:
 
    ```env
-   DATABASE_URL="postgresql://user:password@localhost:5432/krezona"
-   DIRECT_URL="postgresql://user:password@localhost:5432/krezona"
+   # Use Supabase connection URLs (Session Pooler for runtime)
+   DATABASE_URL="<SUPABASE_SESSION_POOLER_URL>"
+   # Use Direct URL for migrations if required
+   DIRECT_URL="<SUPABASE_DIRECT_URL>"
    JWT_SECRET="your-secret-key"
    JWT_EXPIRATION="7d"
    PORT=3000
@@ -32,11 +34,28 @@ NestJS + PostgreSQL backend for civil engineering project management.
    EMAIL_PASS="your-app-password"
    ```
 
-3. **Initialize database**
+3. **Initialize database (Supabase + Prisma)**
+
+   Steps to connect and run migrations with Supabase:
+
+   - Create a Supabase project and copy the **Session Pooler** (connection-pooling) URL and the **Direct URL** from Project → Settings → Database.
+   - Paste the Session Pooler URL into `DATABASE_URL` and the Direct URL into `DIRECT_URL` in `.env`.
+
+   Recommended commands:
 
    ```bash
-   npx prisma migrate dev
-   npx prisma db seed
+   # generate Prisma client after installing dependencies
+   npx prisma generate
+
+   # deploy migrations in CI/production (preferred)
+   npx prisma migrate deploy
+
+   # if you must run interactive dev migrations locally against Supabase, use the Direct URL
+   # (replace <DIRECT_URL> with your DIRECT_URL)
+   DIRECT_URL="<DIRECT_URL>" npx prisma migrate dev --name init
+
+   # seed the database if seed script exists
+   npm run seed
    ```
 
 4. **Start the server**
@@ -54,6 +73,62 @@ Server runs on `http://localhost:3000`
 - `npm run seed` — Seed database with default roles
 - `npm run test` — Run tests
 - `npm run lint` — Lint and fix code
+
+## Run & Build
+
+### Development
+
+Open two terminals:
+
+Terminal 1 — Backend
+
+```bash
+cd krezona-task-server
+npm install
+npx prisma generate
+npx prisma migrate dev --name init   # optional for local dev if using DIRECT_URL
+npm run start:dev
+```
+
+Terminal 2 — Frontend
+
+```bash
+cd ../krezona-task-client
+npm install
+npm run dev
+```
+
+### Production build
+
+```bash
+# Backend
+cd krezona-task-server
+npm install --production
+npx prisma generate
+npm run build
+NODE_ENV=production npm run start
+
+# Frontend
+cd ../krezona-task-client
+npm install --production
+npm run build
+npm run start
+```
+
+## Database Description (Supabase)
+
+This project uses Supabase (Postgres) as the primary data store and Prisma as the ORM. Key models include `User`, `Role`, `Project`, `Subscription`, and `LoginLog`. Prisma migrations are tracked in `prisma/migrations/`.
+
+Key notes:
+- Use the Supabase Session Pooler URL for `DATABASE_URL` during runtime to benefit from connection pooling.
+- Use the Direct URL (`DIRECT_URL`) when running migrations if Supabase's permissions prevent shadow DB creation.
+
+## Troubleshooting
+
+- If you see `Module '@prisma/client' has no exported member 'PrismaClient'`:
+   - Run `npx prisma generate` and ensure `node_modules/@prisma/client` exists, then rebuild.
+- If `prisma migrate dev` errors due to shadow DB permissions, prefer `npx prisma migrate deploy` in CI or run `migrate dev` with `DIRECT_URL`.
+- If connection issues occur, verify Supabase project allowed network settings and that the URLs are correct.
 
 ## API Endpoints
 
@@ -111,6 +186,7 @@ Note: most of the `/users` CRUD routes are admin-only (see `/admin/*`); `GET /us
 ### Logs
 
 - `GET /logs` — Login history
+ 
 
 ## Architecture
 
