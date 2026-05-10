@@ -1,0 +1,22 @@
+name: Keepalive Ping
+
+on:
+  schedule:
+    # every 10 minutes
+    - cron: '*/10 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Curl keepalive URL
+        env:
+          KEEPALIVE_URL: ${{ secrets.KEEPALIVE_URL }}
+        run: |
+          if [ -z "$KEEPALIVE_URL" ]; then
+            echo "Missing KEEPALIVE_URL secret" && exit 1
+          fi
+          echo "Pinging $KEEPALIVE_URL"
+          curl --fail --silent --show-error --retry 3 --retry-delay 5 "$KEEPALIVE_URL" -o /dev/null
+          echo "Ping successful"
