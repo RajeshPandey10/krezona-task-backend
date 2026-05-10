@@ -16,7 +16,7 @@ export class AdminService {
     private readonly prisma: PrismaService,
     private readonly usersService: UsersService,
     private readonly subscriptionsService: SubscriptionsService,
-  ) { }
+  ) {}
 
   async dashboard() {
     const [users, projects, subscriptions, logs, failedLogs] =
@@ -63,8 +63,8 @@ export class AdminService {
     const role = dto.roleId
       ? await this.prisma.role.findUnique({ where: { id: dto.roleId } })
       : await this.prisma.role.findUnique({
-        where: { name: dto.roleName!.toUpperCase() },
-      });
+          where: { name: dto.roleName!.toUpperCase() },
+        });
 
     if (!role) {
       AppError.badRequest('Role not found');

@@ -9,8 +9,8 @@ async function bootstrap() {
     origin: [
       'http://localhost:3001',
       'https://krezona.rajeshpandey10.com.np',
-      "https://krezona-task-frontend.vercel.app/",
-      "https://krezona-task-backend.onrender.com/",
+      'https://krezona-task-frontend.vercel.app/',
+      'https://krezona-task-backend.onrender.com/',
       'http://localhost:3000',
     ],
     credentials: true,
