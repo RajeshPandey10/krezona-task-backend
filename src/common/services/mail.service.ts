@@ -29,6 +29,12 @@ export class MailService {
       `,
     };
 
-    await this.transporter.sendMail(mailOptions);
+    try {
+      await this.transporter.sendMail(mailOptions);
+    } catch (err) {
+
+      console.error('Failed to send OTP email', { to: email, err });
+      throw err;
+    }
   }
 }
