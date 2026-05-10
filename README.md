@@ -23,21 +23,30 @@ NestJS + PostgreSQL backend for civil engineering project management.
    Create a `.env` file:
 
    ```env
-   # Use Supabase connection URLs (Session Pooler for runtime)
+   # Database Configuration
    DATABASE_URL="<SUPABASE_SESSION_POOLER_URL>"
-   # Use Direct URL for migrations if required
    DIRECT_URL="<SUPABASE_DIRECT_URL>"
+
+   # JWT Configuration
    JWT_SECRET="your-secret-key"
    JWT_EXPIRATION="7d"
+
+   # Server Configuration
    PORT=3000
-   EMAIL_USER="your-email@gmail.com"
-   EMAIL_PASS="your-app-password"
+
+   # Email Service Configuration (Brevo recommended, SMTP fallback)
+   # For Brevo (recommended for production):
+   BREVO_API_KEY="your-brevo-api-key"
+   EMAIL_USER="no-reply@yourdomain.com"
+
+   # For SMTP fallback (used if BREVO_API_KEY is not set):
+   # EMAIL_USER="your-email@gmail.com"
+   # EMAIL_PASS="your-app-password"
    ```
 
 3. **Initialize database (Supabase + Prisma)**
 
    Steps to connect and run migrations with Supabase:
-
    - Create a Supabase project and copy the **Session Pooler** (connection-pooling) URL and the **Direct URL** from Project → Settings → Database.
    - Paste the Session Pooler URL into `DATABASE_URL` and the Direct URL into `DIRECT_URL` in `.env`.
 
@@ -47,7 +56,7 @@ NestJS + PostgreSQL backend for civil engineering project management.
    # generate Prisma client after installing dependencies
    npx prisma generate
 
-  
+
 
    # if you must run interactive dev migrations locally against Supabase, use the Direct URL
    # (replace <DIRECT_URL> with your DIRECT_URL)
@@ -97,22 +106,73 @@ npm install
 npm run dev
 ```
 
-
-
 ## Database Description (Supabase)
 
 This project uses Supabase (Postgres) as the primary data store and Prisma as the ORM. Key models include `User`, `Role`, `Project`, `Subscription`, and `LoginLog`. Prisma migrations are tracked in `prisma/migrations/`.
 
 Key notes:
+
 - Use the Supabase Session Pooler URL for `DATABASE_URL` during runtime to benefit from connection pooling.
 - Use the Direct URL (`DIRECT_URL`) when running migrations if Supabase's permissions prevent shadow DB creation.
+
+## Email Service & OTP Configuration
+
+### Mail Service (MailService)
+
+The mail service supports two email delivery methods:
+
+1. **Brevo API (Recommended for Production)**
+   - More reliable and scalable
+   - Set `BREVO_API_KEY` environment variable
+   - Configure `EMAIL_USER` as your sender email
+   - Automatic retry logic and delivery tracking
+
+2. **SMTP Fallback (Development)**
+   - Used when `BREVO_API_KEY` is not set
+   - Falls back to Gmail SMTP
+   - Requires `EMAIL_USER` and `EMAIL_PASS`
+   - Limited to 500 emails per day (Gmail limits)
+
+### OTP Service
+
+OTP (One-Time Password) is used for email verification during registration:
+
+- **OTP Length:** 6 digits (generated randomly)
+- **OTP Expiry:** 10 minutes
+- **Resend:** OTP is regenerated and sent to email on each registration attempt
+- **Verification:** OTP is validated in the `POST /auth/verify-otp` endpoint
+
+Implementation uses `OtpUtil` which provides:
+
+- `generateOtp(length)` — Generates random OTP (default 6 digits)
+- `generateExpiry(minutes)` — Sets expiry timestamp (default 10 minutes)
+- `isExpired(date)` — Checks if OTP has expired
 
 ## Troubleshooting
 
 - If you see `Module '@prisma/client' has no exported member 'PrismaClient'`:
-   - Run `npx prisma generate` and ensure `node_modules/@prisma/client` exists, then rebuild.
+  - Run `npx prisma generate` and ensure `node_modules/@prisma/client` exists, then rebuild.
 - If `prisma migrate dev` errors due to shadow DB permissions, prefer `npx prisma migrate deploy` in CI or run `migrate dev` with `DIRECT_URL`.
 - If connection issues occur, verify Supabase project allowed network settings and that the URLs are correct.
+
+### Email & OTP Troubleshooting
+
+- **OTP email not received:**
+  - Verify `BREVO_API_KEY` is correctly set in `.env`
+  - If using SMTP fallback, ensure `EMAIL_USER` and `EMAIL_PASS` are valid Gmail credentials
+  - Gmail requires app-specific passwords (not regular account password) for SMTP
+  - Check spam folder
+  - Verify OTP expiry hasn't passed (10 minutes default)
+
+- **Brevo API errors:**
+  - Check API key is valid in [Brevo Dashboard](https://app.brevo.com/)
+  - Ensure sender email matches your Brevo account
+  - Check rate limits and daily quota in Brevo dashboard
+
+- **No mail transporter configured:**
+  - Either set `BREVO_API_KEY` for Brevo, or
+  - Set both `EMAIL_USER` and `EMAIL_PASS` for SMTP fallback
+  - Cannot use both methods simultaneously (Brevo is prioritized if both are set)
 
 ## API Endpoints
 
@@ -170,7 +230,6 @@ Note: most of the `/users` CRUD routes are admin-only (see `/admin/*`); `GET /us
 ### Logs
 
 - `GET /logs` — Login history
- 
 
 ## Architecture
 
@@ -213,15 +272,21 @@ flowchart LR
    F[Frontend (Next.js)] -->|API requests| A[Backend API (NestJS)]
    A --> P[Prisma Client]
    P --> DB[(PostgreSQL / Supabase)]
-   A -->|Emails / OTP| SMTP[SMTP / Mail Service]
+   A -->|Emails / OTP| MS[Mail Service]
+   MS -->|Brevo API| BREVO[Brevo Mail Service]
+   MS -->|SMTP Fallback| SMTP[Gmail SMTP]
    A -->|Auth| JWT[(JWT + JwtUtil)]
    note right of A: Guards: JwtAuthGuard, RolesGuard, SubscriptionGuard
 ```
 
 ### Security & Secrets Handling (Recommendations)
 
-- **Environment variables:** Keep all secrets (e.g. `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, SMTP credentials) out of source control. Use `.env` for local development and a secrets manager in production.
+- **Environment variables:** Keep all secrets (e.g. `DATABASE_URL`, `DIRECT_URL`, `JWT_SECRET`, `BREVO_API_KEY`, SMTP credentials) out of source control. Use `.env` for local development and a secrets manager in production.
 - **Production secret stores:** Use a secrets manager such as HashiCorp Vault, AWS Secrets Manager, Azure Key Vault, or Supabase project secrets. Avoid storing long-lived secrets directly in CI logs or repo settings.
+- **Email credentials:**
+  - For Brevo, use an API key scoped to email sending only (create a restricted API key in Brevo)
+  - For SMTP, use app-specific passwords (not account passwords) and rotate them regularly
+  - Never log or expose `BREVO_API_KEY` or email credentials
 - **JWT handling & expiration:** `JWT_SECRET` protects tokens. Use short access token TTLs (e.g., 15m) and refresh tokens if long sessions are required. Rotate `JWT_SECRET` periodically and provide a token revocation mechanism if needed.
 - **Token storage:** For web frontends prefer `HttpOnly`, `Secure`, `SameSite` cookies for access/refresh tokens. For desktop apps (Electron/Tauri) store tokens in the OS secure store (Keychain, Windows Credential Manager) rather than localStorage.
 - **CORS policy rationale:** Restrict `CORS` to known origins (frontend app origin(s)). In `src/main.ts` CORS is configured to allow specific origins and credentials. This prevents unwanted cross-origin access while allowing the frontend to send cookies when credentials are enabled.
@@ -232,7 +297,12 @@ flowchart LR
 
 - Never commit `.env` or `secrets.*` files. Add them to `.gitignore`.
 - Use database connection pooling (Supabase Session Pooler) for production workloads.
-- Ensure SMTP credentials used for OTP are limited to sending and rotated regularly.
+- For email sending in production, use Brevo API (`BREVO_API_KEY`) instead of SMTP for better reliability and deliverability:
+  - Sign up at [Brevo](https://www.brevo.com/) and get your API key
+  - Configure your sender email in Brevo dashboard
+  - Set `BREVO_API_KEY` in production environment
+- OTP emails expire after 10 minutes; users should verify quickly after registration
+- Rate limit OTP requests to prevent abuse (currently no per-request rate limiting; consider adding if needed)
 
 ### API docs & examples
 
@@ -252,8 +322,3 @@ curl 'http://localhost:3000/users/me' \
 ```
 
 If you prefer Postman, import the collection from the Postman documentation link above and set an `access_token` environment variable to test protected routes.
-
-
-
-
-
