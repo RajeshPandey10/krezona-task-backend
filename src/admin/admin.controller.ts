@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AdminService } from './admin.service';
@@ -16,7 +17,9 @@ import { CreateRoleDto } from '../roles/dto/create-role.dto';
 import { UpdateSubscriptionDto } from '../subscriptions/dto/update-subscription.dto';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { RolesGuard } from '../common/guards/roles.guard';
 
+@UseGuards(RolesGuard)
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}

@@ -18,8 +18,6 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { AdminModule } from './admin/admin.module';
 import { LogsModule } from './logs/logs.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
-import { RolesGuard } from './common/guards/roles.guard';
-import { SubscriptionGuard } from './common/guards/subscription.guard';
 
 @Module({
   imports: [
@@ -56,14 +54,6 @@ import { SubscriptionGuard } from './common/guards/subscription.guard';
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: SubscriptionGuard,
     },
   ],
 })

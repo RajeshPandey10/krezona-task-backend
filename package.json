@@ -19,7 +19,6 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-
     "test:brevo": "node scripts/test-brevo.js"
   },
   "dependencies": {
@@ -43,7 +42,8 @@
     "prisma": "^7.8.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "swagger-ui-express": "^5.0.1"
+    "swagger-ui-express": "^5.0.1",
+    "cookie-parser": "^1.4.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
